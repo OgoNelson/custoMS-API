@@ -1,5 +1,5 @@
-const Company = require("../model/company.model")
-const jwt = require("jsonwebtoken")
+const Company = require("../model/company.model");
+const jwt = require("jsonwebtoken");
 
 // JWT helper
 function generateToken(company) {
@@ -18,14 +18,17 @@ const registerCompany = async (req, res) => {
     const { name, email, password } = req.body;
 
     const existing = await Company.findOne({ email });
-    if (existing) return res.status(400).json({ message: "Email already in use" });
+    if (existing)
+      return res.status(400).json({ message: "Email already in use" });
 
     const company = new Company({ name, email, password });
     await company.save();
 
     res.status(201).json({ message: "Company registered successfully" });
   } catch (err) {
-    res.status(500).json({ message: "Error registering company", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Error registering company", error: err.message });
   }
 };
 
@@ -37,10 +40,12 @@ const loginCompany = async (req, res) => {
     const { email, password } = req.body;
 
     const company = await Company.findOne({ email });
-    if (!company) return res.status(400).json({ message: "Invalid credentials" });
+    if (!company)
+      return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await company.comparePassword(password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid credentials" });
 
     const token = generateToken(company);
     res.json({ token });
@@ -49,4 +54,22 @@ const loginCompany = async (req, res) => {
   }
 };
 
-module.exports = {registerCompany, loginCompany}
+// =======================
+// Get company profile
+// =======================
+const getProfile = async (req, res) => {
+  try {
+    const company = await Company.findById(req.user.id).select(
+      "-password -gmailRefreshToken"
+    );
+    if (!company) return res.status(404).json({ message: "Company not found" });
+
+    res.json(company);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error fetching profile", error: err.message });
+  }
+};
+
+module.exports = { registerCompany, loginCompany, getProfile };
