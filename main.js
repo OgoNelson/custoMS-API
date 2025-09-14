@@ -1,4 +1,5 @@
 const express = require("express");
+const companyRouter = require("./router/company.router");
 
 const app = express();
 
@@ -11,5 +12,8 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.send("OK");
 });
+
+//routes
+app.use("/api/v1/company", companyRouter);
 
 module.exports = app;
