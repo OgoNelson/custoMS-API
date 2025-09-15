@@ -10,7 +10,11 @@ const companySchema = new mongoose.Schema(
     password: { type: String, required: true }, // stored hashed
 
     // Plan management
-    status: { type: String, enum: ["free", "premium"], default: "free" },
+    subscriptionStatus: {
+      type: String,
+      enum: ["free", "premium"],
+      default: "free",
+    },
     premiumExpiry: { type: Date }, // when premium ends
 
     // Gmail OAuth2 integration
