@@ -24,4 +24,8 @@ router.post("/setup-sms", companyController.setupSMS);
 // Google OAuth2 flow
 router.use("/auth", authRouter);
 
+// setup custom Email and SMS message route
+router.post("/custom-email", companyController.setupCustomEmail);
+router.post("/custom-sms", companyController.setupCustomSms);
+
 module.exports = router;

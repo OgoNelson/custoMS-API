@@ -95,5 +95,71 @@ const setupSMS = async (req, res) => {
   }
 };
 
+// =======================
+// setup Email custom message
+// =======================
+const setupCustomEmail = async (req, res) => {
+  try {
+    const { customEmailMessage } = req.body;
 
-module.exports = { registerCompany, loginCompany, getProfile, setupSMS };
+    if (!customEmailMessage) {
+      return res
+        .status(400)
+        .json({ message: "Custom email message is required" });
+    }
+
+    const company = await Company.findById(req.user.id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+    company.customEmailMessage = customEmailMessage;
+    await company.save();
+
+    res.json({
+      message: "Custom email message updated successfully",
+    });
+  } catch (error) {
+    console.error("Error setting custom email:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// =======================
+// setup SMS custom message
+// =======================
+const setupCustomSms = async (req, res) => {
+  try {
+    const { customSMSMessage } = req.body;
+
+    if (!customSMSMessage) {
+      return res
+        .status(400)
+        .json({ message: "Custom SMS message is required" });
+    }
+
+    const company = await Company.findById(req.user.id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    company.customSMSMessage = customSMSMessage;
+    await company.save();
+
+    res.json({
+      message: "Custom SMS message updated successfully",
+    });
+  } catch (error) {
+    console.error("Error setting custom SMS:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+module.exports = {
+  registerCompany,
+  loginCompany,
+  getProfile,
+  setupSMS,
+  setupCustomEmail,
+  setupCustomSms,
+};
