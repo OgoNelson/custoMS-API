@@ -1,4 +1,5 @@
 const Company = require("../model/company.model");
+const CryptoHelper = require("../utils/cryptoHelper");
 const jwt = require("jsonwebtoken");
 
 // ----------------------------
@@ -83,7 +84,7 @@ const setupSMS = async (req, res) => {
     const company = await Company.findById(req.user.id);
     if (!company) return res.status(404).json({ message: "Company not found" });
 
-    company.smsApiKey = apiKey;
+    company.smsApiKey = CryptoHelper.encrypt(apiKey);
     company.smsUsername = username;
     company.smsEnabled = true;
 
