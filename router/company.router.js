@@ -14,6 +14,11 @@ router.post("/login", companyController.loginCompany);
 // =======================
 router.use(authCompany.authorizeCompany);
 
+//company's profile
 router.get("/", companyController.getProfile);
+
+// setup integrations
+router.post("/setup-gmail", companyController.setupGmail);
+router.post("/setup-sms", companyController.setupSMS);
 
 module.exports = router;

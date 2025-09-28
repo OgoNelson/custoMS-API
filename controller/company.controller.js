@@ -1,7 +1,9 @@
 const Company = require("../model/company.model");
 const jwt = require("jsonwebtoken");
 
-// JWT helper
+// ----------------------------
+// Auth Helpers
+// ----------------------------
 function generateToken(company) {
   return jwt.sign(
     { id: company._id, email: company.email },
@@ -71,5 +73,11 @@ const getProfile = async (req, res) => {
       .json({ message: "Error fetching profile", error: err.message });
   }
 };
+
+// =======================
+// setup integrations
+// =======================
+
+
 
 module.exports = { registerCompany, loginCompany, getProfile };

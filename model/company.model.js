@@ -9,20 +9,22 @@ const companySchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true }, //main company's email
     password: { type: String, required: true }, // stored hashed
 
-    // Plan management
+    // Gmail OAuth2 integration
+    gmailRefreshToken: { type: String }, // stored ENCRYPTED
+    replyToEmail: { type: String }, // email where replies are sent to. e.g support@example.com
+
+    // SMS setup per company
+    smsEnabled: { type: Boolean, default: false },
+    smsApiKey: { type: String, select: false },
+    smsUsername: { type: String },
+
+    // Subscription
     subscriptionStatus: {
       type: String,
       enum: ["free", "premium"],
       default: "free",
     },
-    premiumExpiry: { type: Date }, // when premium ends
-
-    // Gmail OAuth2 integration
-    gmailAddress: { type: String }, // connected Gmail
-    gmailRefreshToken: { type: String }, // stored ENCRYPTED
-
-    // email where replies are sent to. e.g support@example.com
-    replyToEmail: { type: String },
+     premiumExpiresAt: { type: Date }, // when premium ends
   },
   { timestamps: true }
 );
