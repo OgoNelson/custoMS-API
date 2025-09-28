@@ -75,9 +75,24 @@ const getProfile = async (req, res) => {
 };
 
 // =======================
-// setup integrations
+// setup SMS
 // =======================
+const setupSMS = async (req, res) => {
+  try {
+    const { apiKey, username } = req.body;
+    const company = await Company.findById(req.user.id);
+    if (!company) return res.status(404).json({ message: "Company not found" });
+
+    company.smsApiKey = apiKey;
+    company.smsUsername = username;
+    company.smsEnabled = true;
+
+    await company.save();
+    res.json({ message: "SMS setup successful" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 
-
-module.exports = { registerCompany, loginCompany, getProfile };
+module.exports = { registerCompany, loginCompany, getProfile, setupSMS };
