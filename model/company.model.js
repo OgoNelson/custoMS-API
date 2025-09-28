@@ -18,13 +18,17 @@ const companySchema = new mongoose.Schema(
     smsApiKey: { type: String, select: false },
     smsUsername: { type: String },
 
+    // Custom Birthday Messages
+    customEmailMessage: { type: String, default: "" },
+    customSMSMessage: { type: String, default: "" },
+
     // Subscription
     subscriptionStatus: {
       type: String,
       enum: ["free", "premium"],
       default: "free",
     },
-     premiumExpiresAt: { type: Date }, // when premium ends
+    premiumExpiresAt: { type: Date }, // when premium ends
   },
   { timestamps: true }
 );
