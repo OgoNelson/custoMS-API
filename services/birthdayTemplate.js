@@ -4,12 +4,10 @@ const birthdayEmailTemplate = (company, customer) => {
   const message =
     company.customEmailMessage && company.customEmailMessage.trim() !== ""
       ? company.customEmailMessage
-          .replace("{name}", customer.name)
-          .replace("{company}", company.name)
       : `Dear ${customer.name},\n\nAll of us at ${company.name} wish you a very Happy Birthday! 🥳\n\nWarm regards,\n${company.name}`;
 
   return { subject, message };
-}
+};
 
 const birthdaySMSTemplate = (company, customer) => {
   return company.customSMSMessage && company.customSMSMessage.trim() !== ""
@@ -17,6 +15,6 @@ const birthdaySMSTemplate = (company, customer) => {
         .replace("{name}", customer.name)
         .replace("{company}", company.name)
     : `Happy Birthday ${customer.name}! 🎉 Warm wishes from all of us at ${company.name}`;
-}
+};
 
 module.exports = { birthdayEmailTemplate, birthdaySMSTemplate };

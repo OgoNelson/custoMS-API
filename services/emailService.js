@@ -47,7 +47,9 @@ const sendEmail = async (company, customer, subject, message) => {
       status: "sent",
     });
 
-    return { success: true };
+    return res
+      .status(200)
+      .json({ message: "Email sent" });
   } catch (error) {
     console.error("Email sending failed:", error);
 

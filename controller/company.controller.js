@@ -62,9 +62,7 @@ const loginCompany = async (req, res) => {
 // =======================
 const getProfile = async (req, res) => {
   try {
-    const company = await Company.findById(req.user.id).select(
-      "-password -gmailRefreshToken"
-    );
+    const company = await Company.findById(req.user.id).select("-password");
     if (!company) return res.status(404).json({ message: "Company not found" });
 
     res.json(company);
@@ -153,7 +151,6 @@ const setupCustomSms = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 module.exports = {
   registerCompany,
