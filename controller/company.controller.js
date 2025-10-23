@@ -1,4 +1,5 @@
 const Company = require("../model/company.model");
+const CryptoHelper = require("../utils/cryptoHelper");
 const jwt = require("jsonwebtoken");
 
 // ----------------------------
@@ -61,9 +62,7 @@ const loginCompany = async (req, res) => {
 // =======================
 const getProfile = async (req, res) => {
   try {
-    const company = await Company.findById(req.user.id).select(
-      "-password -gmailRefreshToken"
-    );
+    const company = await Company.findById(req.user.id).select("-password");
     if (!company) return res.status(404).json({ message: "Company not found" });
 
     res.json(company);
@@ -75,9 +74,89 @@ const getProfile = async (req, res) => {
 };
 
 // =======================
-// setup integrations
+// setup SMS
 // =======================
+const setupSMS = async (req, res) => {
+  try {
+    const { apiKey, username } = req.body;
+    const company = await Company.findById(req.user.id);
+    if (!company) return res.status(404).json({ message: "Company not found" });
 
+    company.smsApiKey = CryptoHelper.encrypt(apiKey);
+    company.smsUsername = username;
+    company.smsEnabled = true;
 
+    await company.save();
+    res.json({ message: "SMS setup successful" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
-module.exports = { registerCompany, loginCompany, getProfile };
+// =======================
+// setup Email custom message
+// =======================
+const setupCustomEmail = async (req, res) => {
+  try {
+    const { customEmailMessage } = req.body;
+
+    if (!customEmailMessage) {
+      return res
+        .status(400)
+        .json({ message: "Custom email message is required" });
+    }
+
+    const company = await Company.findById(req.user.id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+    company.customEmailMessage = customEmailMessage;
+    await company.save();
+
+    res.json({
+      message: "Custom email message updated successfully",
+    });
+  } catch (error) {
+    console.error("Error setting custom email:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// =======================
+// setup SMS custom message
+// =======================
+const setupCustomSms = async (req, res) => {
+  try {
+    const { customSMSMessage } = req.body;
+
+    if (!customSMSMessage) {
+      return res
+        .status(400)
+        .json({ message: "Custom SMS message is required" });
+    }
+
+    const company = await Company.findById(req.user.id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    company.customSMSMessage = customSMSMessage;
+    await company.save();
+
+    res.json({
+      message: "Custom SMS message updated successfully",
+    });
+  } catch (error) {
+    console.error("Error setting custom SMS:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = {
+  registerCompany,
+  loginCompany,
+  getProfile,
+  setupSMS,
+  setupCustomEmail,
+  setupCustomSms,
+};

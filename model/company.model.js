@@ -10,7 +10,7 @@ const companySchema = new mongoose.Schema(
     password: { type: String, required: true }, // stored hashed
 
     // Gmail OAuth2 integration
-    gmailRefreshToken: { type: String }, // stored ENCRYPTED
+    gmailRefreshToken: { type: String, default: "" }, // stored ENCRYPTED
     replyToEmail: { type: String }, // email where replies are sent to. e.g support@example.com
 
     // SMS setup per company
@@ -18,13 +18,17 @@ const companySchema = new mongoose.Schema(
     smsApiKey: { type: String, select: false },
     smsUsername: { type: String },
 
+    // Custom Birthday Messages
+    customEmailMessage: { type: String, default: "" },
+    customSMSMessage: { type: String, default: "" },
+
     // Subscription
     subscriptionStatus: {
       type: String,
       enum: ["free", "premium"],
       default: "free",
     },
-     premiumExpiresAt: { type: Date }, // when premium ends
+    premiumExpiresAt: { type: Date }, // when premium ends
   },
   { timestamps: true }
 );
@@ -39,10 +43,10 @@ companySchema.pre("save", async function (next) {
     this.password = await bcrypt.hash(this.password, salt);
   }
 
-  // encrypt refresh token if new/changed
-  if (this.isModified("gmailRefreshToken") && this.gmailRefreshToken) {
-    this.gmailRefreshToken = encrypt(this.gmailRefreshToken);
-  }
+  // // encrypt refresh token if new/changed
+  // if (this.isModified("gmailRefreshToken") && this.gmailRefreshToken) {
+  //   this.gmailRefreshToken = encrypt(this.gmailRefreshToken);
+  // }
 
   next();
 });

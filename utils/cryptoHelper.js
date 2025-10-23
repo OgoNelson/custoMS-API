@@ -1,29 +1,31 @@
-const crypto = require("crypto");
+const CryptoJS = require("crypto-js");
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-const IV = process.env.ENCRYPTION_IV;
+const SECRET_KEY = process.env.ENCRYPTION_KEY || "supersecretkey123";
+console.log(SECRET_KEY);
 
 // Encrypt text
 function encrypt(text) {
-  const cipher = crypto.createCipheriv(
-    "aes-256-cbc",
-    Buffer.from(ENCRYPTION_KEY),
-    IV
-  );
-  let encrypted = cipher.update(text, "utf8", "hex");
-  encrypted += cipher.final("hex");
-  return encrypted;
+  if (!text) {
+    throw new Error("encrypt() called with empty text");
+  }
+  return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
 }
 
 // Decrypt text
-function decrypt(encryptedText) {
-  const decipher = crypto.createDecipheriv(
-    "aes-256-cbc",
-    Buffer.from(ENCRYPTION_KEY),
-    IV
-  );
-  let decrypted = decipher.update(encryptedText, "hex", "utf8");
-  decrypted += decipher.final("utf8");
+function decrypt(ciphertext) {
+  if (!ciphertext) {
+    throw new Error("decrypt() called with empty ciphertext");
+  }
+
+  const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
+  const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+
+  if (!decrypted) {
+    throw new Error(
+      "Failed to decrypt: invalid ciphertext or secret key mismatch"
+    );
+  }
+
   return decrypted;
 }
 

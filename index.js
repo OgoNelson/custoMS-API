@@ -1,6 +1,7 @@
 const app = require("./main");
 const database = require("./config/database");
 const dotenv = require("dotenv");
+const scheduler = require("./services/scheduler");
 
 dotenv.config();
 
