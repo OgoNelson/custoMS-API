@@ -12,8 +12,6 @@ const birthdayEmailTemplate = (company, customer) => {
 const birthdaySMSTemplate = (company, customer) => {
   return company.customSMSMessage && company.customSMSMessage.trim() !== ""
     ? company.customSMSMessage
-        .replace("{name}", customer.name)
-        .replace("{company}", company.name)
     : `Happy Birthday ${customer.name}! 🎉 Warm wishes from all of us at ${company.name}`;
 };
 
