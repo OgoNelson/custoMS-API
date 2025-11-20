@@ -51,23 +51,4 @@ router.get("/google/callback", async (req, res) => {
   }
 });
 
-// Step 1: Redirect to Google for consent
-router.get("/google/:companyId", async (req, res) => {
-  console.log("✅ Google auth hit:", req.query);
-  const { companyId } = req.params;
-
-  // Generate OAuth URL dynamically with company ID as a state parameter
-  const url = oAuth2Client.generateAuthUrl({
-    access_type: "offline",
-    prompt: "consent",
-    scope: [
-      "https://www.googleapis.com/auth/gmail.send",
-      "https://www.googleapis.com/auth/gmail.readonly",
-    ],
-    state: companyId, // keep track of which company is connecting
-  });
-
-  res.redirect(url);
-});
-
 module.exports = router;
