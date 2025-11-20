@@ -152,6 +152,87 @@ const setupCustomSms = async (req, res) => {
   }
 };
 
+// =======================
+// Setup Gmail OAuth2
+// =======================
+const setupGmail = async (req, res) => {
+  try {
+    const company = await Company.findById(req.user.id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // Generate OAuth URL with company ID as state parameter
+    const { google } = require("googleapis");
+    const oAuth2Client = new google.auth.OAuth2(
+      process.env.GMAIL_CLIENT_ID,
+      process.env.GMAIL_CLIENT_SECRET,
+      process.env.GMAIL_REDIRECT_URI
+    );
+
+    const url = oAuth2Client.generateAuthUrl({
+      access_type: "offline",
+      prompt: "consent",
+      scope: [
+        "https://www.googleapis.com/auth/gmail.send",
+        "https://www.googleapis.com/auth/gmail.readonly",
+      ],
+      state: company._id.toString(),
+    });
+
+    res.json({ authUrl: url });
+  } catch (error) {
+    console.error("Error setting up Gmail:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// =======================
+// Disconnect Gmail OAuth2
+// =======================
+const disconnectGmail = async (req, res) => {
+  try {
+    const company = await Company.findById(req.user.id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // Clear Gmail credentials
+    company.gmailRefreshToken = "";
+    company.replyToEmail = "";
+    company.gmailSetupComplete = false;
+
+    await company.save();
+
+    res.json({ message: "Gmail disconnected successfully" });
+  } catch (error) {
+    console.error("Error disconnecting Gmail:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// =======================
+// Get Gmail Status
+// =======================
+const getGmailStatus = async (req, res) => {
+  try {
+    const company = await Company.findById(req.user.id).select(
+      "gmailSetupComplete replyToEmail"
+    );
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    res.json({
+      isConnected: company.gmailSetupComplete,
+      email: company.replyToEmail || null,
+    });
+  } catch (error) {
+    console.error("Error getting Gmail status:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   registerCompany,
   loginCompany,
@@ -159,4 +240,7 @@ module.exports = {
   setupSMS,
   setupCustomEmail,
   setupCustomSms,
+  setupGmail,
+  disconnectGmail,
+  getGmailStatus,
 };

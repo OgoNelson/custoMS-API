@@ -2,6 +2,7 @@ const nodemailer = require("nodemailer");
 const { google } = require("googleapis");
 const CryptoHelper = require("../utils/cryptoHelper");
 const EmailLog = require("../model/emailLogModel");
+const Company = require("../model/company.model");
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.GMAIL_CLIENT_ID,
@@ -18,7 +19,22 @@ const sendEmail = async (company, customer, subject, message) => {
     const refreshToken = CryptoHelper.decrypt(company.gmailRefreshToken);
     oAuth2Client.setCredentials({ refresh_token: refreshToken });
 
-    const accessToken = await oAuth2Client.getAccessToken();
+    let accessToken;
+    try {
+      accessToken = await oAuth2Client.getAccessToken();
+    } catch (tokenError) {
+      // Handle expired or invalid refresh token
+      if (tokenError.message.includes('invalid_grant') || tokenError.message.includes('unauthorized_client')) {
+        // Mark Gmail as disconnected in the database
+        await Company.findByIdAndUpdate(company._id, {
+          gmailRefreshToken: "",
+          replyToEmail: "",
+          gmailSetupComplete: false
+        });
+        throw new Error("Gmail authorization expired. Please reconnect your Gmail account.");
+      }
+      throw tokenError;
+    }
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -47,9 +63,7 @@ const sendEmail = async (company, customer, subject, message) => {
       status: "sent",
     });
 
-    return res
-      .status(200)
-      .json({ message: "Email sent" });
+    return { success: true, message: "Email sent successfully" };
   } catch (error) {
     console.error("Email sending failed:", error);
 

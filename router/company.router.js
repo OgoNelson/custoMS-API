@@ -24,6 +24,11 @@ router.get("/", companyController.getProfile);
 // setup integrations
 router.post("/setup-sms", companyController.setupSMS);
 
+// Gmail OAuth2 setup routes
+router.post("/setup-gmail", companyController.setupGmail);
+router.post("/disconnect-gmail", companyController.disconnectGmail);
+router.get("/gmail-status", companyController.getGmailStatus);
+
 // setup custom Email and SMS message route
 router.post("/custom-email", companyController.setupCustomEmail);
 router.post("/custom-sms", companyController.setupCustomSms);
