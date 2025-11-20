@@ -1,4 +1,7 @@
 const Company = require("../model/company.model");
+const Customer = require("../model/customer.model");
+const { sendEmail } = require("../services/emailService");
+const { sendSMS } = require("../services/smsService");
 const CryptoHelper = require("../utils/cryptoHelper");
 const jwt = require("jsonwebtoken");
 
@@ -233,6 +236,263 @@ const getGmailStatus = async (req, res) => {
   }
 };
 
+// =======================
+// Send broadcast email to all customers
+// =======================
+const broadcastEmailToAll = async (req, res) => {
+  try {
+    const { subject, message } = req.body;
+
+    if (!subject || !message) {
+      return res.status(400).json({
+        message: "Subject and message are required"
+      });
+    }
+
+    const company = await Company.findById(req.user.id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    if (!company.gmailRefreshToken) {
+      return res.status(400).json({
+        message: "Gmail not configured. Please setup Gmail first."
+      });
+    }
+
+    const customers = await Customer.find({ companyId: company._id });
+    
+    if (customers.length === 0) {
+      return res.status(404).json({
+        message: "No customers found for this company"
+      });
+    }
+
+    const results = [];
+    for (const customer of customers) {
+      const result = await sendEmail(company, customer, subject, message, "broadcast");
+      results.push({
+        customerId: customer._id,
+        customerEmail: customer.email,
+        success: result.success,
+        error: result.error || null
+      });
+    }
+
+    const successful = results.filter(r => r.success).length;
+    const failed = results.length - successful;
+
+    res.json({
+      message: `Broadcast email completed. ${successful} sent, ${failed} failed.`,
+      summary: { total: results.length, successful, failed },
+      details: results
+    });
+
+  } catch (error) {
+    console.error("Broadcast email error:", error);
+    res.status(500).json({
+      message: "Error sending broadcast email",
+      error: error.message
+    });
+  }
+};
+
+// =======================
+// Send broadcast email to specific customer
+// =======================
+const broadcastEmailToCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const { subject, message } = req.body;
+
+    if (!subject || !message) {
+      return res.status(400).json({
+        message: "Subject and message are required"
+      });
+    }
+
+    const company = await Company.findById(req.user.id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    if (!company.gmailRefreshToken) {
+      return res.status(400).json({
+        message: "Gmail not configured. Please setup Gmail first."
+      });
+    }
+
+    const customer = await Customer.findOne({
+      _id: customerId,
+      companyId: company._id
+    });
+
+    if (!customer) {
+      return res.status(404).json({
+        message: "Customer not found or does not belong to this company"
+      });
+    }
+
+    const result = await sendEmail(company, customer, subject, message, "broadcast");
+
+    if (result.success) {
+      res.json({
+        message: "Email sent successfully",
+        customer: {
+          id: customer._id,
+          name: customer.name,
+          email: customer.email
+        }
+      });
+    } else {
+      res.status(500).json({
+        message: "Failed to send email",
+        error: result.error
+      });
+    }
+
+  } catch (error) {
+    console.error("Broadcast email to customer error:", error);
+    res.status(500).json({
+      message: "Error sending email",
+      error: error.message
+    });
+  }
+};
+
+// =======================
+// Send broadcast SMS to all customers
+// =======================
+const broadcastSMSToAll = async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({
+        message: "Message is required"
+      });
+    }
+
+    const company = await Company.findById(req.user.id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    if (!company.smsEnabled || !company.smsApiKey || !company.smsUsername) {
+      return res.status(400).json({
+        message: "SMS not configured. Please setup SMS first."
+      });
+    }
+
+    const customers = await Customer.find({
+      companyId: company._id,
+      phone: { $exists: true, $ne: "" }
+    });
+    
+    if (customers.length === 0) {
+      return res.status(404).json({
+        message: "No customers with phone numbers found for this company"
+      });
+    }
+
+    const results = [];
+    for (const customer of customers) {
+      const result = await sendSMS(company, customer, message, "broadcast");
+      results.push({
+        customerId: customer._id,
+        customerPhone: customer.phone,
+        success: result.success,
+        error: result.error || null
+      });
+    }
+
+    const successful = results.filter(r => r.success).length;
+    const failed = results.length - successful;
+
+    res.json({
+      message: `Broadcast SMS completed. ${successful} sent, ${failed} failed.`,
+      summary: { total: results.length, successful, failed },
+      details: results
+    });
+
+  } catch (error) {
+    console.error("Broadcast SMS error:", error);
+    res.status(500).json({
+      message: "Error sending broadcast SMS",
+      error: error.message
+    });
+  }
+};
+
+// =======================
+// Send broadcast SMS to specific customer
+// =======================
+const broadcastSMSToCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({
+        message: "Message is required"
+      });
+    }
+
+    const company = await Company.findById(req.user.id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    if (!company.smsEnabled || !company.smsApiKey || !company.smsUsername) {
+      return res.status(400).json({
+        message: "SMS not configured. Please setup SMS first."
+      });
+    }
+
+    const customer = await Customer.findOne({
+      _id: customerId,
+      companyId: company._id
+    });
+
+    if (!customer) {
+      return res.status(404).json({
+        message: "Customer not found or does not belong to this company"
+      });
+    }
+
+    if (!customer.phone) {
+      return res.status(400).json({
+        message: "Customer does not have a phone number"
+      });
+    }
+
+    const result = await sendSMS(company, customer, message, "broadcast");
+
+    if (result.success) {
+      res.json({
+        message: "SMS sent successfully",
+        customer: {
+          id: customer._id,
+          name: customer.name,
+          phone: customer.phone
+        }
+      });
+    } else {
+      res.status(500).json({
+        message: "Failed to send SMS",
+        error: result.error
+      });
+    }
+
+  } catch (error) {
+    console.error("Broadcast SMS to customer error:", error);
+    res.status(500).json({
+      message: "Error sending SMS",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   registerCompany,
   loginCompany,
@@ -243,4 +503,8 @@ module.exports = {
   setupGmail,
   disconnectGmail,
   getGmailStatus,
+  broadcastEmailToAll,
+  broadcastEmailToCustomer,
+  broadcastSMSToAll,
+  broadcastSMSToCustomer,
 };
