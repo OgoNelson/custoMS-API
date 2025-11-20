@@ -2,7 +2,7 @@ const africastalking = require("africastalking");
 const SMSLog = require("../model/smsLogModel");
 const CryptoHelper = require("../utils/cryptoHelper");
 
-const sendSMS = async (company, customer, message) => {
+const sendSMS = async (company, customer, message, messageType = "birthday") => {
   try {
     if (!company.smsEnabled || !company.smsApiKey || !company.smsUsername) {
       throw new Error("SMS not enabled for this company");
@@ -27,6 +27,7 @@ const sendSMS = async (company, customer, message) => {
       company: company._id,
       customer: customer._id,
       message,
+      messageType,
       status: "sent",
     });
 
@@ -38,6 +39,7 @@ const sendSMS = async (company, customer, message) => {
       company: company._id,
       customer: customer._id,
       message,
+      messageType,
       status: "failed",
     });
 

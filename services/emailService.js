@@ -10,7 +10,7 @@ const oAuth2Client = new google.auth.OAuth2(
   process.env.GMAIL_REDIRECT_URI
 );
 
-const sendEmail = async (company, customer, subject, message) => {
+const sendEmail = async (company, customer, subject, message, messageType = "birthday") => {
   try {
     if (!company.gmailRefreshToken) {
       throw new Error("Gmail not connected for this company");
@@ -60,6 +60,7 @@ const sendEmail = async (company, customer, subject, message) => {
       customer: customer._id,
       subject,
       message,
+      messageType,
       status: "sent",
     });
 
@@ -72,6 +73,7 @@ const sendEmail = async (company, customer, subject, message) => {
       customer: customer._id,
       subject,
       message,
+      messageType,
       status: "failed",
     });
 
