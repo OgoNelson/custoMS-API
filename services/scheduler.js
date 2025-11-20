@@ -33,12 +33,12 @@ cron.schedule("0 6 * * *", async () => {
       for (const customer of customers) {
         if (company.gmailRefreshToken) {
           const { subject, message } = birthdayEmailTemplate(company, customer);
-          await sendEmail(company, customer, subject, message);
+          await sendEmail(company, customer, subject, message, "birthday");
         }
 
         if (company.smsEnabled) {
           const message = birthdaySMSTemplate(company, customer);
-          await sendSMS(company, customer, message);
+          await sendSMS(company, customer, message, "birthday");
         }
       }
     }
