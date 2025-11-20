@@ -1,7 +1,6 @@
 const CryptoJS = require("crypto-js");
 
-const SECRET_KEY = process.env.ENCRYPTION_KEY || "supersecretkey123";
-console.log(SECRET_KEY);
+const SECRET_KEY = process.env.ENCRYPTION_KEY;
 
 // Encrypt text
 function encrypt(text) {

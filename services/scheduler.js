@@ -8,8 +8,8 @@ const {
   birthdaySMSTemplate,
 } = require("./birthdayTemplate");
 
-// Runs every day at 8 AM
-cron.schedule("0 8 * * *", async () => {
+// Runs every day at 6 AM
+cron.schedule("0 6 * * *", async () => {
   console.log("🎂 Birthday scheduler running...");
 
   const today = new Date();
