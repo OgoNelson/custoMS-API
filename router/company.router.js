@@ -33,4 +33,12 @@ router.get("/gmail-status", companyController.getGmailStatus);
 router.post("/custom-email", companyController.setupCustomEmail);
 router.post("/custom-sms", companyController.setupCustomSms);
 
+// broadcast email routes
+router.post("/broadcast-email/all", companyController.broadcastEmailToAll);
+router.post("/broadcast-email/:customerId", companyController.broadcastEmailToCustomer);
+
+// broadcast SMS routes
+router.post("/broadcast-sms/all", companyController.broadcastSMSToAll);
+router.post("/broadcast-sms/:customerId", companyController.broadcastSMSToCustomer);
+
 module.exports = router;
