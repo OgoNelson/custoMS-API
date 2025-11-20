@@ -43,7 +43,7 @@ router.get("/google/callback", async (req, res) => {
 
     return res.json({
       message: "Gmail connected successfully",
-      email: userEmail,
+      email: emailAddress,
     });
   } catch (error) {
     console.error("Google OAuth Error:", error);

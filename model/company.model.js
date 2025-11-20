@@ -12,6 +12,7 @@ const companySchema = new mongoose.Schema(
     // Gmail OAuth2 integration
     gmailRefreshToken: { type: String, default: "" }, // stored ENCRYPTED
     replyToEmail: { type: String }, // email where replies are sent to. e.g support@example.com
+    gmailSetupComplete: { type: Boolean, default: false }, // track if Gmail OAuth2 is set up
 
     // SMS setup per company
     smsEnabled: { type: Boolean, default: false },

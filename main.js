@@ -1,6 +1,6 @@
 const express = require("express");
 const companyRouter = require("./router/company.router");
-const customerRouter = require("./router/customer.router")
+const customerRouter = require("./router/customer.router");
 
 const app = express();
 
@@ -11,7 +11,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.send("OK");
+  res.json({ message: "OK" });
 });
 
 //routes
