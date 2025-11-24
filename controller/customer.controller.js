@@ -8,15 +8,16 @@ const createCustomer = async (req, res) => {
     const { name, email, phone, birthday } = req.body; //birthday format is YYYY-MM-DD
     const company = await Company.findById(companyId);
 
-    // check limit for free plan
-    if (company.subscriptionStatus === "free") {
-      const count = await Customer.countDocuments({ companyId: companyId });
-      if (count >= 7) {
-        return res.status(403).json({
-          message:
-            "Free plan limit reached. Upgrade to premium for unlimited customers.",
-        });
-      }
+    // check limit based on subscription
+    const count = await Customer.countDocuments({ companyId: companyId });
+    const customerLimit = company.getCustomerLimit();
+    if (count >= customerLimit) {
+      return res.status(403).json({
+        message:
+          customerLimit === 7
+            ? "Free plan limit reached. Upgrade to premium for unlimited customers."
+            : "Customer limit reached.",
+      });
     }
 
     const customer = await Customer.create({
@@ -41,7 +42,8 @@ const createCustomer = async (req, res) => {
 const getAllCustomers = async (req, res) => {
   try {
     const companyId = req.user.id;
-    const customers = await Customer.find({ companyId: companyId });
+    const customers = await Customer.find({ companyId: companyId })
+      .sort({ name: 1 }); // Sort alphabetically by name
     res.status(200).json(customers);
   } catch (err) {
     res.status(500).json({ error: err.message });

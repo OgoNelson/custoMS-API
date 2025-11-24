@@ -260,12 +260,19 @@ const broadcastEmailToAll = async (req, res) => {
       });
     }
 
-    const customers = await Customer.find({ companyId: company._id });
+    let customers = await Customer.find({ companyId: company._id })
+      .sort({ name: 1 }); // Sort alphabetically
     
     if (customers.length === 0) {
       return res.status(404).json({
         message: "No customers found for this company"
       });
+    }
+
+    // Apply subscription limits
+    const messageLimit = company.getMessageLimit();
+    if (messageLimit !== Infinity) {
+      customers = customers.slice(0, messageLimit);
     }
 
     const results = [];
@@ -285,7 +292,9 @@ const broadcastEmailToAll = async (req, res) => {
     res.json({
       message: `Broadcast email completed. ${successful} sent, ${failed} failed.`,
       summary: { total: results.length, successful, failed },
-      details: results
+      details: results,
+      limited: messageLimit !== Infinity,
+      messageLimit: messageLimit === Infinity ? "Unlimited" : messageLimit
     });
 
   } catch (error) {
@@ -384,15 +393,21 @@ const broadcastSMSToAll = async (req, res) => {
       });
     }
 
-    const customers = await Customer.find({
+    let customers = await Customer.find({
       companyId: company._id,
       phone: { $exists: true, $ne: "" }
-    });
+    }).sort({ name: 1 }); // Sort alphabetically
     
     if (customers.length === 0) {
       return res.status(404).json({
         message: "No customers with phone numbers found for this company"
       });
+    }
+
+    // Apply subscription limits
+    const messageLimit = company.getMessageLimit();
+    if (messageLimit !== Infinity) {
+      customers = customers.slice(0, messageLimit);
     }
 
     const results = [];
@@ -412,7 +427,9 @@ const broadcastSMSToAll = async (req, res) => {
     res.json({
       message: `Broadcast SMS completed. ${successful} sent, ${failed} failed.`,
       summary: { total: results.length, successful, failed },
-      details: results
+      details: results,
+      limited: messageLimit !== Infinity,
+      messageLimit: messageLimit === Infinity ? "Unlimited" : messageLimit
     });
 
   } catch (error) {
