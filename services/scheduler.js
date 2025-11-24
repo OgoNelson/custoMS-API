@@ -20,7 +20,7 @@ cron.schedule("0 6 * * *", async () => {
     const companies = await Company.find();
 
     for (const company of companies) {
-      const customers = await Customer.find({
+      let customers = await Customer.find({
         companyId: company._id,
         $expr: {
           $and: [
@@ -28,7 +28,13 @@ cron.schedule("0 6 * * *", async () => {
             { $eq: [{ $month: "$birthday" }, month + 1] },
           ],
         },
-      });
+      }).sort({ name: 1 }); // Sort alphabetically
+
+      // Apply subscription limits for birthday messages
+      const messageLimit = company.getMessageLimit();
+      if (messageLimit !== Infinity) {
+        customers = customers.slice(0, messageLimit);
+      }
 
       for (const customer of customers) {
         if (company.gmailRefreshToken) {
