@@ -41,4 +41,8 @@ router.post("/broadcast-email/:customerId", companyController.broadcastEmailToCu
 router.post("/broadcast-sms/all", companyController.broadcastSMSToAll);
 router.post("/broadcast-sms/:customerId", companyController.broadcastSMSToCustomer);
 
+// subscription routes
+router.post("/upgrade-premium", companyController.upgradeToPremium);
+router.get("/subscription-status", companyController.getSubscriptionStatus);
+
 module.exports = router;
