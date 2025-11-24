@@ -510,6 +510,89 @@ const broadcastSMSToCustomer = async (req, res) => {
   }
 };
 
+// =======================
+// Upgrade to premium subscription
+// =======================
+const upgradeToPremium = async (req, res) => {
+  try {
+    const company = await Company.findById(req.user.id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // Check if already premium and not expired
+    if (company.isPremium()) {
+      return res.status(400).json({
+        message: "Company already has premium subscription",
+        expiresAt: company.premiumExpiresAt
+      });
+    }
+
+    company.upgradeToPremium();
+    await company.save();
+
+    res.json({
+      message: "Successfully upgraded to premium subscription",
+      subscriptionStatus: company.subscriptionStatus,
+      expiresAt: company.premiumExpiresAt
+    });
+
+  } catch (error) {
+    console.error("Upgrade to premium error:", error);
+    res.status(500).json({
+      message: "Error upgrading to premium",
+      error: error.message
+    });
+  }
+};
+
+// =======================
+// Get subscription status
+// =======================
+const getSubscriptionStatus = async (req, res) => {
+  try {
+    const company = await Company.findById(req.user.id).select(
+      "subscriptionStatus premiumExpiresAt name email"
+    );
+    
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    const isPremium = company.isPremium();
+    const customerCount = await Customer.countDocuments({ companyId: company._id });
+    const customerLimit = company.getCustomerLimit();
+    const messageLimit = company.getMessageLimit();
+
+    res.json({
+      subscriptionStatus: company.subscriptionStatus,
+      isPremium,
+      expiresAt: company.premiumExpiresAt,
+      limits: {
+        customers: {
+          current: customerCount,
+          limit: customerLimit === Infinity ? "Unlimited" : customerLimit,
+          canAddMore: customerCount < customerLimit
+        },
+        messages: {
+          limit: messageLimit === Infinity ? "Unlimited" : messageLimit
+        },
+        logRetention: {
+          cleanupEnabled: company.shouldCleanupLogs(),
+          retentionDays: company.shouldCleanupLogs() ? 30 : "Permanent"
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error("Get subscription status error:", error);
+    res.status(500).json({
+      message: "Error fetching subscription status",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   registerCompany,
   loginCompany,
@@ -524,4 +607,6 @@ module.exports = {
   broadcastEmailToCustomer,
   broadcastSMSToAll,
   broadcastSMSToCustomer,
+  upgradeToPremium,
+  getSubscriptionStatus,
 };
