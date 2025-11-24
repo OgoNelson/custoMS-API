@@ -44,11 +44,6 @@ companySchema.pre("save", async function (next) {
     this.password = await bcrypt.hash(this.password, salt);
   }
 
-  // // encrypt refresh token if new/changed
-  // if (this.isModified("gmailRefreshToken") && this.gmailRefreshToken) {
-  //   this.gmailRefreshToken = encrypt(this.gmailRefreshToken);
-  // }
-
   next();
 });
 
@@ -57,6 +52,43 @@ companySchema.pre("save", async function (next) {
 //
 companySchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Check if company has premium subscription
+companySchema.methods.isPremium = function () {
+  if (this.subscriptionStatus !== "premium") return false;
+  
+  // Check if premium has expired
+  if (this.premiumExpiresAt && new Date() > this.premiumExpiresAt) {
+    // Auto-revert to free plan
+    this.subscriptionStatus = "free";
+    this.premiumExpiresAt = undefined;
+    this.save();
+    return false;
+  }
+  
+  return true;
+};
+
+// Get customer limit based on subscription
+companySchema.methods.getCustomerLimit = function () {
+  return this.isPremium() ? Infinity : 7;
+};
+
+// Get message limit for broadcasts/birthday (first 7 for free)
+companySchema.methods.getMessageLimit = function () {
+  return this.isPremium() ? Infinity : 7;
+};
+
+// Check if logs should be cleaned up (30 days for free, permanent for premium)
+companySchema.methods.shouldCleanupLogs = function () {
+  return !this.isPremium();
+};
+
+// Upgrade to premium
+companySchema.methods.upgradeToPremium = function () {
+  this.subscriptionStatus = "premium";
+  this.premiumExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
 };
 
 module.exports = mongoose.model("Company", companySchema);
