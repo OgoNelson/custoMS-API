@@ -7,6 +7,7 @@ const {
   birthdayEmailTemplate,
   birthdaySMSTemplate,
 } = require("./birthdayTemplate");
+const { cleanupOldLogs } = require("./logCleanup");
 
 // Runs every day at 6 AM
 cron.schedule("0 6 * * *", async () => {
@@ -51,4 +52,10 @@ cron.schedule("0 6 * * *", async () => {
   } catch (error) {
     console.error("Scheduler error:", error);
   }
+});
+
+// Runs every day at 2 AM for log cleanup
+cron.schedule("0 2 * * *", async () => {
+  console.log("🧹 Log cleanup scheduler running...");
+  await cleanupOldLogs();
 });
